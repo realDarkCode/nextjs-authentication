@@ -1,6 +1,7 @@
 const validationError = (msg) => {
   let err = new Error(msg);
   err.name = "[Validation Error]";
+  err.status = 400;
   return err;
 };
 

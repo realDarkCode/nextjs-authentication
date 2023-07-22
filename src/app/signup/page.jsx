@@ -1,5 +1,6 @@
 "use client";
 import validate from "@/helpers/validation";
+import axios from "axios";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -14,6 +15,7 @@ const initialState = {
 const toastId = "signUpPage";
 const SignUpPage = () => {
   const [state, setState] = useState({ ...initialState });
+  const [loading, setLoading] = useState(false);
   const handleChange = (event) => {
     const { name, value } = event.target;
     setState({ ...state, [name]: value });
@@ -24,26 +26,59 @@ const SignUpPage = () => {
 
   const isValidFormData = () => {
     try {
-      validate(state.firstName, "First name", { minLen: 4 });
-      validate(state.lastName, "Last name", { minLen: 4 });
-      validate(state.email, "email", { minLen: 6 });
-      validate(state.password, "password", { minLen: 8, maxLen: 40 });
-      if (state.password !== state.confirmPassword)
+      const {
+        firstName,
+        lastName,
+        email,
+        password,
+        confirmPassword,
+        termCheck,
+      } = state;
+      validate(firstName, "First name", { minLen: 4 });
+      validate(lastName, "Last name", { minLen: 4 });
+      validate(email, "email", { minLen: 6 });
+      validate(password, "password", { minLen: 8, maxLen: 40 });
+      if (password !== confirmPassword)
         throw new Error("Password and confirm password should match");
 
-      if (!state.termCheck) throw new Error("Please check term and condition ");
+      if (!termCheck) throw new Error("Please check term and condition ");
       return true;
     } catch (error) {
       toast.error(`[Validation Error]: ${error.message}`, { toastId });
       return false;
+    } finally {
     }
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    // prevent page reload on form submit
     e.preventDefault();
 
+    // extract user data from state
+    const { firstName, lastName, email, password } = state;
+
+    // check if form data is valid
     const isValid = isValidFormData();
     if (!isValid) return;
-    toast.success("Submitting");
+
+    try {
+      setLoading(true);
+      // request to create a new user
+      const response = await axios.post("api/users/signup", {
+        firstName,
+        lastName,
+        email,
+        password,
+      });
+
+      const { data } = response;
+      toast[data?.success ? "success" : "warning"](data?.message || r.message, {
+        toastId,
+      });
+    } catch (error) {
+      toast.error(error?.response?.data.message || error.message, { toastId });
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <>
@@ -207,9 +242,10 @@ const SignUpPage = () => {
           <div className="mt-10">
             <button
               type="submit"
-              className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-indigo-400"
+              disabled={loading}
             >
-              Sign up
+              {loading ? "loading..." : "Sign up"}
             </button>
           </div>
         </form>
