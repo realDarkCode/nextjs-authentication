@@ -1,6 +1,8 @@
 "use client";
 import validate from "@/helpers/validation";
+import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 const initialState = {
@@ -9,7 +11,9 @@ const initialState = {
 };
 const toastId = "loginPage";
 const LoginPage = () => {
+  const router = useRouter();
   const [state, setState] = useState({ ...initialState });
+  const [loading, setLoading] = useState(false);
   const handleChange = (event) => {
     const { name, value } = event.target;
     setState({ ...state, [name]: value });
@@ -26,11 +30,33 @@ const LoginPage = () => {
       return false;
     }
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    // validate form data
     const isValid = isValidFormData();
     if (!isValid) return;
-    toast.success("Submitting...");
+    const { email, password } = state;
+    try {
+      setLoading(true);
+      // request to login
+      const response = await axios.post("api/users/login", {
+        email,
+        password,
+      });
+
+      const { data } = response;
+      // show server response
+      toast[data?.success ? "success" : "warning"](data?.message || r.message, {
+        toastId,
+      });
+
+      // navigate to profile page after successfully login
+      data?.success && router.push("/profile");
+    } catch (error) {
+      toast.error(error?.response?.data.message || error.message, { toastId });
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <>
@@ -120,8 +146,9 @@ const LoginPage = () => {
             <button
               type="submit"
               className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              disabled={loading}
             >
-              Login
+              {loading ? "loading..." : "Login"}
             </button>
           </div>
         </form>

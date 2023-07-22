@@ -2,6 +2,7 @@
 import validate from "@/helpers/validation";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 const initialState = {
@@ -14,6 +15,7 @@ const initialState = {
 };
 const toastId = "signUpPage";
 const SignUpPage = () => {
+  const router = useRouter();
   const [state, setState] = useState({ ...initialState });
   const [loading, setLoading] = useState(false);
   const handleChange = (event) => {
@@ -74,6 +76,7 @@ const SignUpPage = () => {
       toast[data?.success ? "success" : "warning"](data?.message || r.message, {
         toastId,
       });
+      data?.success && router.push("/login");
     } catch (error) {
       toast.error(error?.response?.data.message || error.message, { toastId });
     } finally {
@@ -131,7 +134,7 @@ const SignUpPage = () => {
                   id="firstName"
                   value={state.firstName}
                   onChange={handleChange}
-                  className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 autofill:bg-gray-300 autofill:text-gray-900"
                 />
               </div>
             </div>
